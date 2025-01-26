@@ -15,14 +15,24 @@ st.set_page_config(page_title = "Dashboard",
                    initial_sidebar_state = "collapsed")
 alt.themes.enable("dark")
 st.subheader("🛑 Incidentes Automovilisticos (CDMX)")
-st.markdown("#####")
 
 #Creando barra lateral
 with st.sidebar:
     st.image("images/logo.png")
     st.header("Filtros")
     lista_anios = list(df.año_cierre.unique())
+    lista_delegaciones = list(df.delegacion_cierre.unique())
+    lista_codigo = list(df.codigo_cierre.unique())
+    lista_clas_c4 = list(df.incidente_c4.unique())
+    lista_alarma = list(df.clas_con_f_alarma.unique())
+    lista_entrada = list(df.tipo_entrada.unique())
+
     anio_seleccionado = st.selectbox('Seleccione un año', lista_anios)
+    delegacion_seleccionada = st.selectbox('Seleccione una delegacion', lista_delegaciones)
+    codigo_selecionado = st.selectbox('Seleccione un codigo', lista_codigo)
+    clas_seleccionada = st.selectbox('Seleccione una clasificacion', lista_clas_c4)
+    alarma_seleccionada = st.selectbox('Seleccione la clase de alarma', lista_alarma)
+    entrada_seleccionada = st.selectbox('Seleccione un tipo de entrada', lista_entrada)
     df_anio_seleccionado = df[df.año_cierre == anio_seleccionado]
 
 def formatear(num):
@@ -69,15 +79,25 @@ def Home():
             st.info("❗ Incidentes Falsos")
             st.metric(label = "Falsos", value = formatear(no_incidentes_falsos))               
     with col[1]:
-        st.markdown("### Top Delegaciones")
+        st.markdown("### Top 5 Delegaciones")
         delegaciones = df_anio_seleccionado['delegacion_cierre'].value_counts().reset_index()
+        delegaciones = delegaciones.head(5)
         delegaciones.columns = ['Delegación', 'Incidentes'] 
 
         st.dataframe(delegaciones,
                      use_container_width = True,
                      hide_index = True
                      )
+    
+    st.subheader("📁 Base de Datos: Incidentes 2017 a 2019")
+    df_tabla = df_anio_seleccionado[['folio', 'codigo_cierre', 'delegacion_inicio', 'incidente_c4', 'clas_con_f_alarma', 'tipo_entrada', 'año_cierre']]
+    df_tabla.columns = ['Folio', 'Codigo', 'Delegacion', 'Clasificacion del C4', 'Clasificacion de la Alarma', 'Canal de Reporte', 'Año ']
+    st.dataframe(df_tabla,
+                use_container_width = True, 
+                hide_index = True,
+                on_select = "ignore")
 
 Home()
+
 #Mostrando el dataframe en una tabla
 #st.dataframe(df_filter)
