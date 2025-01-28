@@ -8,11 +8,14 @@ part1 = pd.read_csv('data/parte1.csv')
 part2 = pd.read_csv('data/parte2.csv')
 df = pd.concat([part1, part2]) 
 
+
+
 #Configuracion general del dashboard
 st.set_page_config(page_title = "Dashboard", 
                    page_icon = "🚦", 
                    layout = "wide",
                    initial_sidebar_state = "collapsed")
+                   
 alt.themes.enable("dark")
 st.subheader("🛑 Incidentes Automovilisticos (CDMX)")
 
@@ -26,14 +29,23 @@ with st.sidebar:
     lista_clas_c4 = list(df.incidente_c4.unique())
     lista_alarma = list(df.clas_con_f_alarma.unique())
     lista_entrada = list(df.tipo_entrada.unique())
+    
 
     anio_seleccionado = st.selectbox('Seleccione un año', lista_anios)
+    df_anio_seleccionado = df[df.año_cierre == anio_seleccionado]
     delegacion_seleccionada = st.selectbox('Seleccione una delegacion', lista_delegaciones)
     codigo_selecionado = st.selectbox('Seleccione un codigo', lista_codigo)
     clas_seleccionada = st.selectbox('Seleccione una clasificacion', lista_clas_c4)
     alarma_seleccionada = st.selectbox('Seleccione la clase de alarma', lista_alarma)
     entrada_seleccionada = st.selectbox('Seleccione un tipo de entrada', lista_entrada)
-    df_anio_seleccionado = df[df.año_cierre == anio_seleccionado]
+    
+    df_filtrado = df[(df.año_cierre == anio_seleccionado) &
+                    (df.delegacion_cierre == delegacion_seleccionada) &
+                    (df.codigo_cierre == codigo_selecionado) &
+                    (df.incidente_c4 == clas_seleccionada) &
+                    (df.clas_con_f_alarma == alarma_seleccionada) &
+                    (df.tipo_entrada == entrada_seleccionada)]
+    
 
 def formatear(num):
     if num > 1000000:
@@ -76,10 +88,10 @@ def Home():
             st.metric(label = "Negativos", value = formatear(no_incidentes_negativos))
 
         with kpi6:
-            st.info("❗ Incidentes Falsos")
+            st.info("❗ Incidentes Falsos Registrados")
             st.metric(label = "Falsos", value = formatear(no_incidentes_falsos))               
     with col[1]:
-        st.markdown("### Top 5 Delegaciones")
+        st.markdown(f"### 🌎 Top Delegaciones ({anio_seleccionado})")
         delegaciones = df_anio_seleccionado['delegacion_cierre'].value_counts().reset_index()
         delegaciones = delegaciones.head(5)
         delegaciones.columns = ['Delegación', 'Incidentes'] 
@@ -90,12 +102,48 @@ def Home():
                      )
     
     st.subheader("📁 Base de Datos: Incidentes 2017 a 2019")
-    df_tabla = df_anio_seleccionado[['folio', 'codigo_cierre', 'delegacion_inicio', 'incidente_c4', 'clas_con_f_alarma', 'tipo_entrada', 'año_cierre']]
+    df_tabla = df_filtrado[['folio', 'codigo_cierre', 'delegacion_inicio', 'incidente_c4', 'clas_con_f_alarma', 'tipo_entrada', 'año_cierre']]
     df_tabla.columns = ['Folio', 'Codigo', 'Delegacion', 'Clasificacion del C4', 'Clasificacion de la Alarma', 'Canal de Reporte', 'Año ']
-    st.dataframe(df_tabla,
-                use_container_width = True, 
-                hide_index = True,
-                on_select = "ignore")
+
+    with st.expander('Visualizar base de datos'):
+        st.dataframe(df_tabla,
+                    use_container_width = True, 
+                    hide_index = True,
+                    on_select = "ignore")
+    
+    st.subheader("📈 Gráficas")
+    col_g = st.columns(2, gap = "small")
+    #Graficar
+    with col_g[0]:
+        with st.container(border = True):
+            frecuencia = df_anio_seleccionado['delegacion_cierre'].value_counts().reset_index()
+            frecuencia.columns = ['Delegacion', 'Frecuencia']
+            st.subheader(f"Frecuencia por delegacion ({anio_seleccionado})")
+            st.bar_chart(frecuencia, x = 'Delegacion', y = 'Frecuencia', x_label = 'Delegacion', y_label = 'Frecuencia',
+            horizontal = False)
+    with col_g[1]:
+        with st.container(border = True):
+            freq_canal_reporte = df_anio_seleccionado['tipo_entrada'].value_counts().reset_index()
+            freq_canal_reporte.columns = ['Canal de Reporte', 'Frecuencia']
+            st.subheader(f"Frecuencia por canal de reporte ({anio_seleccionado})")
+            st.bar_chart(freq_canal_reporte, x = 'Canal de Reporte', y = 'Frecuencia', x_label = 'Canal', y_label = 'Frecuencia',
+            horizontal = False)
+
+    colg_g_2 = st.columns(2, gap = "small")
+    with colg_g_2[0]:
+        with st.container(border = True):
+            freq_clasificacion = df_anio_seleccionado['codigo_cierre'].value_counts().reset_index()
+            freq_clasificacion.columns = ['Clasificacion', 'Frecuencia']
+            st.subheader(f"Frecuencia por clasificacion de cierre ({anio_seleccionado})")
+            st.bar_chart(freq_clasificacion, x = 'Clasificacion', y = 'Frecuencia', x_label = 'Clasificacion', y_label = 'Frecuencia',
+            horizontal = False)
+    with colg_g_2[1]:
+        with st.container(border = True):
+            freq_alarma = df_anio_seleccionado['clas_con_f_alarma'].value_counts().reset_index()
+            freq_alarma.columns = ['Alarma', 'Frecuencia']
+            st.subheader(f"Frecuencia por alarma ({anio_seleccionado})")
+            st.bar_chart(freq_alarma, x = 'Alarma', y = 'Frecuencia', x_label = 'Alarma', y_label = 'Frecuencia',
+            horizontal = False)
 
 Home()
 
