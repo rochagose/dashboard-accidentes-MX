@@ -15,6 +15,10 @@ Desarrollo de un dashboard utilizando Python y Streamlit. Incluye KPI's, filtros
 ![App Screenshot](https://i.postimg.cc/0yJGXcDC/dsh.png)
 
 ![App Screenshot](https://i.postimg.cc/J4HpDbKS/dsh3.png)
+
+## Demo
+[![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://cdmx-accidents-2017-2019-dashboard.streamlit.app/)
+
 ## Autor
 
 - [@rochagose](https://github.com/rochagose)
